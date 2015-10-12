@@ -1,0 +1,23 @@
+# Sidekiq Schedulable
+
+Schedule Cron style Sidekiq jobs
+
+## Usage
+
+```ruby
+require 'sidekiq_schedulable'
+```
+
+```ruby
+class MyJob
+  include Sidekiq::Worker
+  include Sidekiq::Schedulable
+
+  sidekiq_options retry: false, queue: 'my_scheduled_jobs_queue'
+  sidekiq_schedule '*/5 * * * * *'
+
+  def perform
+    RunReport.call
+  end
+end
+```
