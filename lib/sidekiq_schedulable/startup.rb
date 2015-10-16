@@ -2,10 +2,6 @@ require 'sidekiq_schedulable/schedule'
 
 module SidekiqSchedulable
   class Startup
-    def self.schedule!(schedules, current_jobs)
-      new(schedules, current_jobs).schedule!
-    end
-
     def initialize(schedules, current_jobs)
       @schedules = schedules
       @current_jobs = current_jobs

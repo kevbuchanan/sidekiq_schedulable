@@ -131,7 +131,7 @@ describe SidekiqSchedulable do
     end
 
     it "enqueues a job for the given worker on an empty queue" do
-      SidekiqSchedulable::Startup.schedule!(schedules, current_jobs)
+      SidekiqSchedulable::Startup.new(schedules, current_jobs).schedule!
 
       expect(TestWorker.jobs.size).to eq(1)
       expect(TestWorker.jobs.first['at']).to eq(next_ten_minutes.to_f)
@@ -140,7 +140,7 @@ describe SidekiqSchedulable do
     it "adds the last_run argument based on the schedule" do
       last_run = midnight - 60 * 60 * 12
 
-      SidekiqSchedulable::Startup.schedule!(schedules, current_jobs)
+      SidekiqSchedulable::Startup.new(schedules, current_jobs).schedule!
 
       expect(AnotherWorker.jobs.size).to eq(1)
       expect(AnotherWorker.jobs.first['args']).to eq([last_run.to_f])
@@ -148,8 +148,8 @@ describe SidekiqSchedulable do
     end
 
     it "does not enqueue a duplicate job for the given worker" do
-      SidekiqSchedulable::Startup.schedule!(schedules, current_jobs)
-      SidekiqSchedulable::Startup.schedule!(schedules, current_jobs)
+      SidekiqSchedulable::Startup.new(schedules, current_jobs).schedule!
+      SidekiqSchedulable::Startup.new(schedules, current_jobs).schedule!
 
       expect(TestWorker.jobs.size).to eq(1)
     end
