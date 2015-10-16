@@ -8,18 +8,18 @@ module SidekiqSchedulable
       end
 
       def call(worker, item, queue)
+        start_time = Time.now
         yield
       ensure
-        schedule_next_job(item) if item['scheduled']
+        schedule_next_job(item, start_time) if item['scheduled']
       end
 
       private
 
-      def schedule_next_job(item)
+      def schedule_next_job(item, start_time)
         class_name = item['class']
         if schedule = @schedules[class_name]
-          time = Schedule.next_time(schedule[:at])
-          schedule[:worker].perform_at(time)
+          Schedule.enqueue(schedule, start_time)
         end
       end
     end

@@ -12,13 +12,39 @@ describe SidekiqSchedulable do
     include Sidekiq::Schedulable
 
     sidekiq_schedule '*/10 * * * * *'
+
+    def perform
+      :done
+    end
+  end
+
+  class AnotherWorker
+    include Sidekiq::Worker
+    include Sidekiq::Schedulable
+
+    sidekiq_schedule '0 12 * * * *', last_run: true
+
+    def perform(last_run)
+      Time.now - Time.at(last_run)
+    end
   end
 
   let(:midnight) { Time.new(2015, 10, 1, 0, 0, 0) }
   let(:next_ten_minutes) { midnight + 10 * 60 }
 
   let(:schedules) {
-    { 'TestWorker' => { worker: TestWorker, at: '*/10 * * * * *' } }
+    {
+      'TestWorker' => {
+        worker: TestWorker,
+        at: '*/10 * * * * *',
+        options: {}
+      },
+      'AnotherWorker' => {
+        worker: AnotherWorker,
+        at: '0 12 * * * *',
+        options: { last_run: true }
+      }
+    }
   }
 
   before do
@@ -26,7 +52,7 @@ describe SidekiqSchedulable do
   end
 
   after do
-    TestWorker.jobs.clear
+    Sidekiq::Worker.clear_all
   end
 
   it "adds the schedule to the schedules" do
@@ -34,6 +60,7 @@ describe SidekiqSchedulable do
 
     expect(schedule[:at]).to eq('*/10 * * * * *')
     expect(schedule[:worker]).to eq(TestWorker)
+    expect(schedule[:options]).to eq({})
   end
 
   describe SidekiqSchedulable::Middleware::Server do
@@ -59,6 +86,16 @@ describe SidekiqSchedulable do
       end
 
       expect(TestWorker.jobs.size).to eq(0)
+    end
+
+    it "adds the last_run argument based on the last job start time" do
+      middleware.call(worker, { 'scheduled' => true, 'class' => 'AnotherWorker' }, 'a_queue') do
+        true
+      end
+
+      expect(AnotherWorker.jobs.size).to eq(1)
+      expect(AnotherWorker.jobs.first['args']).to eq([Time.now.to_f])
+      expect { AnotherWorker.drain }.to_not raise_error
     end
   end
 
@@ -98,6 +135,16 @@ describe SidekiqSchedulable do
 
       expect(TestWorker.jobs.size).to eq(1)
       expect(TestWorker.jobs.first['at']).to eq(next_ten_minutes.to_f)
+    end
+
+    it "adds the last_run argument based on the schedule" do
+      last_run = midnight - 60 * 60 * 12
+
+      SidekiqSchedulable::Startup.schedule!(schedules, current_jobs)
+
+      expect(AnotherWorker.jobs.size).to eq(1)
+      expect(AnotherWorker.jobs.first['args']).to eq([last_run.to_f])
+      expect { AnotherWorker.drain }.to_not raise_error
     end
 
     it "does not enqueue a duplicate job for the given worker" do

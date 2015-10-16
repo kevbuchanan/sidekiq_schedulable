@@ -14,8 +14,7 @@ module SidekiqSchedulable
     def schedule!
       schedules.each do |klass_name, schedule|
         unless already_scheduled?(klass_name)
-          time = Schedule.next_time(schedule[:at])
-          schedule[:worker].perform_at(time)
+          Schedule.enqueue(schedule)
         end
       end
     end
