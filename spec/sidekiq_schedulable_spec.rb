@@ -119,7 +119,7 @@ describe SidekiqSchedulable do
         true
       end
 
-      expect(item['schedule']).to be_nil
+      expect(item['scheduled']).to be_nil
     end
   end
 
