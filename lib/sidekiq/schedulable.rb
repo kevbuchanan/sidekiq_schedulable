@@ -5,10 +5,11 @@ module Sidekiq
     end
 
     module ClassMethods
-      def sidekiq_schedule(schedule)
+      def sidekiq_schedule(schedule, options = {})
         SidekiqSchedulable.schedules[self.to_s] = {
           worker: self,
-          at: schedule
+          at: schedule,
+          options: options
         }
       end
     end

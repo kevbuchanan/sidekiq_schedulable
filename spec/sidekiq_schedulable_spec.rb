@@ -17,6 +17,10 @@ describe SidekiqSchedulable do
   let(:midnight) { Time.new(2015, 10, 1, 0, 0, 0) }
   let(:next_ten_minutes) { midnight + 10 * 60 }
 
+  let(:schedules) {
+    { 'TestWorker' => { worker: TestWorker, at: '*/10 * * * * *' } }
+  }
+
   before do
     Timecop.freeze(midnight)
   end
@@ -26,7 +30,7 @@ describe SidekiqSchedulable do
   end
 
   it "adds the schedule to the schedules" do
-    schedule = SidekiqSchedulable.schedules["TestWorker"]
+    schedule = SidekiqSchedulable.schedules['TestWorker']
 
     expect(schedule[:at]).to eq('*/10 * * * * *')
     expect(schedule[:worker]).to eq(TestWorker)
@@ -34,12 +38,12 @@ describe SidekiqSchedulable do
 
   describe SidekiqSchedulable::Middleware::Server do
     let(:worker) { TestWorker.new }
-    let(:middleware) { SidekiqSchedulable::Middleware::Server.new }
+    let(:middleware) { SidekiqSchedulable::Middleware::Server.new(schedules) }
 
     it "ensures the job is re-enqueued for next time" do
       expect {
-        middleware.call(worker, { 'schedule' => '*/10 * * * * *' }, 'a queue') do
-          raise "Error"
+        middleware.call(worker, { 'scheduled' => true, 'class' => 'TestWorker' }, 'a_queue') do
+          raise 'Error'
         end
       }.to raise_error RuntimeError, "Error"
 
@@ -50,7 +54,7 @@ describe SidekiqSchedulable do
     end
 
     it "does not re-schedule if the job has no schedule" do
-      middleware.call(worker, {}, 'a queue') do
+      middleware.call(worker, {}, 'a_queue') do
         true
       end
 
@@ -58,27 +62,23 @@ describe SidekiqSchedulable do
     end
   end
 
-  let(:schedules) {
-    { "TestWorker" => { worker: TestWorker, at: '*/10 * * * * *' } }
-  }
-
   describe SidekiqSchedulable::Middleware::Client do
     let(:middleware) { SidekiqSchedulable::Middleware::Client.new(schedules) }
 
     it "adds the schedule to the job item" do
       item = {}
 
-      middleware.call("TestWorker", item, "a queue", nil) do
+      middleware.call('TestWorker', item, 'a queue', nil) do
         true
       end
 
-      expect(item['schedule']).to eq('*/10 * * * * *')
+      expect(item['scheduled']).to eq(true)
     end
 
     it "does not add the schedule if the worker has no schedule" do
       item = {}
 
-      middleware.call("Array", item, "a queue", nil) do
+      middleware.call('Array', item, 'a_queue', nil) do
         true
       end
 

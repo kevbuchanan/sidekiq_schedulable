@@ -12,11 +12,10 @@ module SidekiqSchedulable
     end
 
     def schedule!
-      schedules.each do |worker_class, schedule|
-        unless already_scheduled?(worker_class)
+      schedules.each do |klass_name, schedule|
+        unless already_scheduled?(klass_name)
           time = Schedule.next_time(schedule[:at])
-          worker = schedule[:worker]
-          worker.perform_at(time)
+          schedule[:worker].perform_at(time)
         end
       end
     end
@@ -25,15 +24,15 @@ module SidekiqSchedulable
 
     attr_reader :schedules, :current_jobs
 
-    def already_scheduled?(worker_class)
+    def already_scheduled?(klass_name)
       scheduled_jobs.any? do |job|
-        job.item['class'] == worker_class
+        job.item['class'] == klass_name
       end
     end
 
     def scheduled_jobs
       @scheduled_jobs ||= current_jobs.select do |job|
-        job.item['schedule']
+        job.item['scheduled']
       end
     end
   end

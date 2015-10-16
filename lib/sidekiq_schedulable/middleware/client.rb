@@ -7,7 +7,7 @@ module SidekiqSchedulable
 
       def call(worker_class, item, queue, redis_pool)
         if schedule = @schedules[worker_class]
-          item['schedule'] = schedule[:at]
+          item['scheduled'] = true
         end
         yield
       end

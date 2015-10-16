@@ -12,7 +12,7 @@ module SidekiqSchedulable
   def self.boot!
     Sidekiq.configure_server do |config|
       config.server_middleware do |chain|
-        chain.add Middleware::Server
+        chain.add Middleware::Server, schedules
       end
 
       config.client_middleware do |chain|
