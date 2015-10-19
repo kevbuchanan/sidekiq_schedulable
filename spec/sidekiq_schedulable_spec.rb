@@ -36,12 +36,12 @@ describe SidekiqSchedulable do
     {
       'TestWorker' => {
         worker: TestWorker,
-        at: '*/10 * * * * *',
+        cron: '*/10 * * * * *',
         options: {}
       },
       'AnotherWorker' => {
         worker: AnotherWorker,
-        at: '0 12 * * * *',
+        cron: '0 12 * * * *',
         options: { last_run: true }
       }
     }
@@ -58,7 +58,7 @@ describe SidekiqSchedulable do
   it "adds the schedule to the schedules" do
     schedule = SidekiqSchedulable.schedules['TestWorker']
 
-    expect(schedule[:at]).to eq('*/10 * * * * *')
+    expect(schedule[:cron]).to eq('*/10 * * * * *')
     expect(schedule[:worker]).to eq(TestWorker)
     expect(schedule[:options]).to eq({})
   end

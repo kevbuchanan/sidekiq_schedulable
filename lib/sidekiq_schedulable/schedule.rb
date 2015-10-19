@@ -4,9 +4,9 @@ module SidekiqSchedulable
   module Schedule
     def self.enqueue(schedule, last_run = nil)
       worker = schedule[:worker]
-      time = next_time(schedule[:at])
+      time = next_time(schedule[:cron])
       if schedule[:options][:last_run]
-        last_time = last_run || last_time(schedule[:at])
+        last_time = last_run || last_time(schedule[:cron])
         worker.perform_at(time, last_time.to_f)
       else
         worker.perform_at(time)

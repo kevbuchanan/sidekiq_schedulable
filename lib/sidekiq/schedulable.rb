@@ -8,7 +8,7 @@ module Sidekiq
       def sidekiq_schedule(schedule, options = {})
         SidekiqSchedulable.schedules[self.to_s] = {
           worker: self,
-          at: schedule,
+          cron: schedule,
           options: options
         }
       end
