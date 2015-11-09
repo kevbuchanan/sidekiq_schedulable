@@ -3,6 +3,8 @@ require 'parse-cron'
 module SidekiqSchedulable
   module Schedule
     def self.enqueue(schedule, last_run = nil)
+      return unless schedule[:cron]
+
       worker = schedule[:worker]
       time = next_time(schedule[:cron])
       if schedule[:options][:last_run]

@@ -153,5 +153,13 @@ describe SidekiqSchedulable do
 
       expect(TestWorker.jobs.size).to eq(1)
     end
+
+    it "does not enqueue a job with no schedule" do
+      schedules['TestWorker'][:cron] = nil
+
+      SidekiqSchedulable::Startup.new(schedules, current_jobs).schedule!
+
+      expect(TestWorker.jobs.size).to eq(0)
+    end
   end
 end
