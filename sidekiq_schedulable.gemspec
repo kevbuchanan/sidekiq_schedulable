@@ -14,9 +14,9 @@ Gem::Specification.new do |spec|
   spec.files         = `git ls-files -z`.split("\x0")
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "sidekiq", "~> 3.0"
-  spec.add_dependency "parse-cron", "~> 0.1.4"
+  spec.add_dependency "sidekiq", ">= 3.0"
+  spec.add_dependency "parse-cron", "~> 0.1"
 
   spec.add_development_dependency "rspec", "~> 3.0"
-  spec.add_development_dependency "timecop", "~> 0.8.0"
+  spec.add_development_dependency "timecop", "~> 0.8"
 end
