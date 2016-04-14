@@ -1,3 +1,5 @@
+[![Gem Version](https://badge.fury.io/rb/sidekiq_schedulable.svg)](https://badge.fury.io/rb/sidekiq_schedulable)
+
 # Sidekiq Schedulable
 
 Schedule Cron style Sidekiq jobs
