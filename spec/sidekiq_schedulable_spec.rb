@@ -29,20 +29,39 @@ describe SidekiqSchedulable do
     end
   end
 
+  class MultipleSchedulesWorker
+    include Sidekiq::Worker
+    include Sidekiq::Schedulable
+
+    sidekiq_schedule ['0 */2 * * * *', '0 */3 * * * *', '0 */5 * * * *']
+
+    def perform
+      :nothing
+    end
+  end
+
   let(:midnight) { Time.new(2015, 10, 1, 0, 0, 0) }
   let(:next_ten_minutes) { midnight + 10 * 60 }
+  let(:next_five_minutes) { midnight + 5 * 60 }
+  let(:next_three_minutes) { midnight + 3 * 60 }
+  let(:next_two_minutes) { midnight + 2 * 60 }
 
   let(:schedules) {
     {
       'TestWorker' => {
         worker: TestWorker,
-        cron: '*/10 * * * * *',
+        crons: ['*/10 * * * * *'],
         options: {}
       },
       'AnotherWorker' => {
         worker: AnotherWorker,
-        cron: '0 12 * * * *',
+        crons: ['0 12 * * * *'],
         options: { last_run: true }
+      },
+      'MultipleSchedulesWorker' => {
+        worker: MultipleSchedulesWorker,
+        crons: ['*/2 * * * * *', '*/3 * * * * *', '*/5 * * * * *'],
+        options: {}
       }
     }
   }
@@ -58,7 +77,7 @@ describe SidekiqSchedulable do
   it "adds the schedule to the schedules" do
     schedule = SidekiqSchedulable.schedules['TestWorker']
 
-    expect(schedule[:cron]).to eq('*/10 * * * * *')
+    expect(schedule[:crons]).to eq(['*/10 * * * * *'])
     expect(schedule[:worker]).to eq(TestWorker)
     expect(schedule[:options]).to eq({})
   end
@@ -155,11 +174,18 @@ describe SidekiqSchedulable do
     end
 
     it "does not enqueue a job with no schedule" do
-      schedules['TestWorker'][:cron] = nil
+      schedules['TestWorker'][:crons] = []
 
       SidekiqSchedulable::Startup.new(schedules, current_jobs).schedule!
 
       expect(TestWorker.jobs.size).to eq(0)
+    end
+
+    it "creates multiple jobs for multiple schedules" do
+      SidekiqSchedulable::Startup.new(schedules, current_jobs).schedule!
+
+      expect(MultipleSchedulesWorker.jobs.size).to eq(3)
+      expect([next_two_minutes.to_f, next_three_minutes.to_f, next_five_minutes.to_f]).to eq(MultipleSchedulesWorker.jobs.map{ |j| j['at'] })
     end
   end
 end

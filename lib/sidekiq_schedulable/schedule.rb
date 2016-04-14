@@ -3,15 +3,17 @@ require 'parse-cron'
 module SidekiqSchedulable
   module Schedule
     def self.enqueue(schedule, last_run = nil)
-      return unless schedule[:cron]
+      return if schedule[:crons].empty?
 
       worker = schedule[:worker]
-      time = next_time(schedule[:cron])
-      if schedule[:options][:last_run]
-        last_time = last_run || last_time(schedule[:cron])
-        worker.perform_at(time, last_time.to_f)
-      else
-        worker.perform_at(time)
+      schedule[:crons].each do |cron|
+        time = next_time(cron)
+        if schedule[:options][:last_run]
+          last_time = last_run || last_time(cron)
+          worker.perform_at(time, last_time.to_f)
+        else
+          worker.perform_at(time)
+        end
       end
     end
 
