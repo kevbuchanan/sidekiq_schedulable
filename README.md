@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/kevinbuch/sidekiq_schedulable.svg?branch=master)](https://travis-ci.org/kevinbuch/sidekiq_schedulable)
 [![Gem Version](https://badge.fury.io/rb/sidekiq_schedulable.svg)](https://badge.fury.io/rb/sidekiq_schedulable)
 
 # Sidekiq Schedulable
