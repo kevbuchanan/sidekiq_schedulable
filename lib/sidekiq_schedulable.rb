@@ -1,4 +1,5 @@
 require 'sidekiq'
+require 'sidekiq/api'
 require 'sidekiq/schedulable'
 require 'sidekiq_schedulable/startup'
 require 'sidekiq_schedulable/middleware/server'
